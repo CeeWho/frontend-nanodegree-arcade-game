@@ -1,8 +1,11 @@
 // Enemies our player must avoid
-var Enemy = function() {
+/*
+var Enemy = function(position,speed) {
     // Variables applied to each of our instances go here,
     // we've provided one for you to get started
-
+    this.x = position[0];
+    this.y = position[1];
+    this.speed = speed;
     // The image/sprite for our enemies, this uses
     // a helper we've provided to easily load images
     this.sprite = 'images/enemy-bug.png';
@@ -11,14 +14,52 @@ var Enemy = function() {
 // Update the enemy's position, required method for game
 // Parameter: dt, a time delta between ticks
 Enemy.prototype.update = function(dt) {
+    this.x = this.x + (dt * this.speed);
     // You should multiply any movement by the dt parameter
     // which will ensure the game runs at the same speed for
     // all computers.
+
 };
 
 // Draw the enemy on the screen, required method for game
 Enemy.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+};
+*/
+
+var Entity = function(position,spriteLoc) {
+    // Variables applied to each of our instances go here,
+    // we've provided one for you to get started
+    this.x = position[0];
+    this.y = position[1];
+    // The image/sprite for our enemies, this uses
+    // a helper we've provided to easily load images
+    this.sprite = sprite;
+};
+Entity.prototype.update = function(dt) {
+    this.x += (dt * this.speed);
+    // You should multiply any movement by the dt parameter
+    // which will ensure the game runs at the same speed for
+    // all computers.
+
+};
+// Draw the enemy on the screen, required method for game
+Entity.prototype.render = function() {
+    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+};
+
+var Enemy = function (loc,spd) {
+    Entity.call(this, loc, 'images/enemy-bug.png');
+    this.speed = spd;
+};
+Enemy.prototype.constructor = Enemy;
+
+var Player = function (loc, img) {
+    Entity.call(this, loc, img);
+};
+Player.prototype.constructor = Player;
+Player.prototype.handleInput = function () {
+  
 };
 
 // Now write your own player class
