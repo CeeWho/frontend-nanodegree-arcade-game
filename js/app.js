@@ -34,32 +34,71 @@ var Entity = function(position,spriteLoc) {
     this.y = position[1];
     // The image/sprite for our enemies, this uses
     // a helper we've provided to easily load images
-    this.sprite = sprite;
+    this.sprite = spriteLoc;
+    this.speed = [0,0];
 };
-Entity.prototype.update = function(dt) {
-    this.x += (dt * this.speed);
-    // You should multiply any movement by the dt parameter
-    // which will ensure the game runs at the same speed for
-    // all computers.
-
-};
-// Draw the enemy on the screen, required method for game
+// Draw the entity on the screen, required method for game
 Entity.prototype.render = function() {
+    console.log(this.x,this.y,this.sprite,this.speed,this.constructor);
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
+
+
 
 var Enemy = function (loc,spd) {
     Entity.call(this, loc, 'images/enemy-bug.png');
     this.speed = spd;
 };
+Enemy.prototype = Object.create(Entity.prototype);
+/* Enemy.prototype.collisionCheck = function() {
+    if (this.x == player.x && this.y == player.y) {
+      console.log('you lost');
+    }
+};*/
+
+Entity.prototype.update = function(dt) {
+    this.x += (dt * this.speed[0]);
+    this.y += (dt * this.speed[1]);
+//    this.collisionCheck();
+    // You should multiply any movement by the dt parameter
+    // which will ensure the game runs at the same speed for
+    // all computers
+
+};
 Enemy.prototype.constructor = Enemy;
 
-var Player = function (loc, img) {
+
+
+var Player = function (loc,img) {
     Entity.call(this, loc, img);
+    console.log(this.x,this.y);
 };
+Player.prototype = Object.create(Entity.prototype);
 Player.prototype.constructor = Player;
-Player.prototype.handleInput = function () {
-  
+/*Player.prototype.update = function(dt) {
+    this.x += (dt * this.speed[0]);
+    this.y += (dt * this.speed[1]);
+    this.speed = [0,0];
+    // You should multiply any movement by the dt parameter
+    // which will ensure the game runs at the same speed for
+    // all computers
+
+};*/
+Player.prototype.handleInput = function (direction) {
+  switch (direction) {
+    case 'left':
+      this.speed[0] = -100;
+      break;
+    case 'right':
+      this.speed[0] = 100;
+      break;
+    case 'up':
+      this.speed[1] = -100;
+      break;
+    case 'down':
+      this.speed[1] = 100;
+      break;
+  }
 };
 
 // Now write your own player class
@@ -71,6 +110,10 @@ Player.prototype.handleInput = function () {
 // Place all enemy objects in an array called allEnemies
 // Place the player object in a variable called player
 
+var enemyOne = new Enemy([250,500],[10,0]);
+var allEnemies = [enemyOne];
+
+var player = new Player([250,250],'images/char-cat-girl.png');
 
 
 // This listens for key presses and sends the keys to your
