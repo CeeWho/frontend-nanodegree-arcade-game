@@ -41,8 +41,13 @@ var Entity = function(position,spriteLoc) {
 };
 // Draw the entity on the screen, required method for game
 Entity.prototype.render = function() {
-    console.log(this.x,this.y,this.sprite,this.speed,this.constructor);
-    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+    //console.log(this.x,this.y,this.sprite,this.speed,this.constructor);
+    if (this.speed[0] < 0) {
+      ctx.scale(-1,1);
+      ctx.drawImage(Resources.get(this.sprite), -(this.x), -(this.y));
+    } else {
+      ctx.drawImage(Resources.get(this.sprite), (this.x), (this.y));
+    }
 };
 // for ref: ctx.drawImage(Resources.get(rowImages[row]), col * 101, row * 83);
 
@@ -76,9 +81,9 @@ var Player = function (loc,img) {
 };
 Player.prototype = Object.create(Entity.prototype);
 Player.prototype.constructor = Player;
-Player.prototype.update = function(dt) {
-    this.x += (dt * this.speed[0]);
-    this.y += (dt * this.speed[1]);
+Player.prototype.update = function() {
+    this.x += this.speed[0];
+    this.y += this.speed[1];
     this.speed = [0,0];
     // You should multiply any movement by the dt parameter
     // which will ensure the game runs at the same speed for
@@ -115,10 +120,13 @@ Player.prototype.handleInput = function (direction) {
 // Place all enemy objects in an array called allEnemies
 // Place the player object in a variable called player
 
-var enemyOne = new Enemy([250,0],[0,0]);
-var allEnemies = [enemyOne];
+var enemyOne = new Enemy([-100,-20],[10,0]);
+//var enemyTwo = new Enemy([500,1],[-10,0]);
+var enemyThree = new Enemy([-100,200],[15,0]);
+var allEnemies = [enemyOne,enemyThree];
 
-var player = new Player([250,250],'images/enemy-bug.png');
+var player = new Player([10,10],'images/char-boy.png');
+player.logPos();
 
 
 // This listens for key presses and sends the keys to your
