@@ -49,6 +49,30 @@ Entity.prototype.render = function() {
       ctx.drawImage(Resources.get(this.sprite), (this.x), (this.y));
     }
 };
+Entity.prototype.checkEdge = function(wide,high) {
+    var edgeCode = [0,0]; // 0 = Not on Edge, 1 = left edge, 2 = right edge
+                          // 0 = Not on Edge, 1 = top edge, 2 = bottom edge
+
+    //checking horizontally
+    if ((this.x-50) < 0) {
+      edgeCode[0] = 1;
+    } else if ((this.x+150) > wide) {
+      edgeCode[0] = 2;
+    } else {
+      edgeCode[0] = 0;
+    }
+
+    //And vertically...
+    if ((this.y-50) < 0) {
+      edgeCode[1] = 1;
+    } else if ((this.y+250) > high) {
+      edgeCode[1] = 2;
+    } else {
+      edgeCode[1] = 0;
+    }
+
+    return edgeCode;
+};
 // for ref: ctx.drawImage(Resources.get(rowImages[row]), col * 101, row * 83);
 
 
@@ -58,8 +82,15 @@ var Enemy = function (loc,spd) {
 };
 Enemy.prototype = Object.create(Entity.prototype);
 Enemy.prototype.collisionCheck = function() {
-    if (this.x == player.x && this.y == player.y) {
-      console.log('you lost');
+    var width = 100,
+        height = 71,
+        pWidth = 70;
+    var playerXOff = player.x + 15;
+    if (this.x < (playerXOff + pWidth) && (this.x+ width) > playerXOff) {
+      if (this.y < (player.y + height) &&
+      (this.y + height) > player.y) {
+        console.log('you lost');
+      }
     }
 };
 Enemy.prototype.update = function(dt) {
@@ -77,7 +108,6 @@ Enemy.prototype.constructor = Enemy;
 
 var Player = function (loc,img) {
     Entity.call(this, loc, img);
-    console.log(this.x,this.y);
 };
 Player.prototype = Object.create(Entity.prototype);
 Player.prototype.constructor = Player;
@@ -85,28 +115,31 @@ Player.prototype.update = function() {
     this.x += this.speed[0];
     this.y += this.speed[1];
     this.speed = [0,0];
-    // You should multiply any movement by the dt parameter
-    // which will ensure the game runs at the same speed for
-    // all computers
 
-};
-Player.prototype.logPos = function(){
-    console.log(this.x,this.y);
 };
 
 Player.prototype.handleInput = function (direction) {
+  var edgeCode = this.checkEdge(ctx.canvas.width,ctx.canvas.height);
   switch (direction) {
     case 'left':
-      this.speed[0] = -100;
+      if (edgeCode[0] != 1) {
+        this.speed[0] = -100;
+      }
       break;
     case 'right':
-      this.speed[0] = 100;
+      if (edgeCode[0] != 2) {
+        this.speed[0] = 100;
+      }
       break;
     case 'up':
-      this.speed[1] = -100;
+      if (edgeCode[1] != 1) {
+        this.speed[1] = -80;
+      }
       break;
     case 'down':
-      this.speed[1] = 100;
+      if (edgeCode[1] !=2) {
+        this.speed[1] = 80;
+      }
       break;
   }
 };
@@ -120,13 +153,12 @@ Player.prototype.handleInput = function (direction) {
 // Place all enemy objects in an array called allEnemies
 // Place the player object in a variable called player
 
-var enemyOne = new Enemy([-100,-20],[10,0]);
+var enemyOne = new Enemy([-100,60],[10,0]);
 //var enemyTwo = new Enemy([500,1],[-10,0]);
-var enemyThree = new Enemy([-100,200],[15,0]);
+var enemyThree = new Enemy([-100,220],[15,0]);
 var allEnemies = [enemyOne,enemyThree];
 
-var player = new Player([10,10],'images/char-boy.png');
-player.logPos();
+var player = new Player([200,380],'images/char-boy.png');
 
 
 // This listens for key presses and sends the keys to your
