@@ -28,7 +28,8 @@ Enemy.prototype.render = function() {
 */
 //--------------Original Code Above this line -----------------------
 
-
+// Code for any entity in the game that might interact.
+// Input is a two item array
 var Entity = function(position,spriteLoc) {
     // Variables applied to each of our instances go here,
     // we've provided one for you to get started
@@ -41,44 +42,40 @@ var Entity = function(position,spriteLoc) {
 };
 // Draw the entity on the screen, required method for game
 Entity.prototype.render = function() {
-    //console.log(this.x,this.y,this.sprite,this.speed,this.constructor);
-    if (this.speed[0] < 0) {
-      ctx.scale(-1,1);
-      ctx.drawImage(Resources.get(this.sprite), -(this.x), -(this.y));
-    } else {
       ctx.drawImage(Resources.get(this.sprite), (this.x), (this.y));
-    }
 };
+
+//  Check if entity is off the board
 Entity.prototype.checkEdge = function(wide,high) {
-    var edgeCode = [0,0]; // 0 = Not on Edge, 1 = left edge, 2 = right edge
+    var edgeCode = [0,0]; // 0 = Not on Edge, 1 = right edge, 2 = left edge
                           // 0 = Not on Edge, 1 = top edge, 2 = bottom edge
 
-    //checking horizontally
-    if ((this.x-50) < 0) {
+    //Checking horizontally
+    if ((this.x + 101) <= 0) {
       edgeCode[0] = 1;
-    } else if ((this.x+150) > wide) {
+    } else if ((this.x+5) >= wide) {
       edgeCode[0] = 2;
     } else {
       edgeCode[0] = 0;
     }
 
     //And vertically...
-    if ((this.y-50) < 0) {
+    if ((this.y+20) < 0) {
       edgeCode[1] = 1;
-    } else if ((this.y+250) > high) {
+    } else if ((this.y+171) > high) {
       edgeCode[1] = 2;
     } else {
       edgeCode[1] = 0;
     }
-
     return edgeCode;
 };
-// for ref: ctx.drawImage(Resources.get(rowImages[row]), col * 101, row * 83);
 
 
-var Enemy = function (loc,spd) {
-    Entity.call(this, loc, 'images/enemy-bug.png');
-    this.speed = spd;
+
+var Enemy = function (difficulty,tier) {
+    Entity.call(this, [-150,200], 'images/enemy-bug.png');
+    this.difficulty = difficulty;
+    this.tier = tier;
 };
 Enemy.prototype = Object.create(Entity.prototype);
 Enemy.prototype.collisionCheck = function() {
@@ -86,11 +83,18 @@ Enemy.prototype.collisionCheck = function() {
         height = 71,
         pWidth = 70;
     var playerXOff = player.x + 15;
+    // first check for collision with Player
     if (this.x < (playerXOff + pWidth) && (this.x+ width) > playerXOff) {
       if (this.y < (player.y + height) &&
       (this.y + height) > player.y) {
-        console.log('you lost');
+        console.log('you lost',this.y);
       }
+    }
+    // Then check for running off screen
+    var enemyEdgeCode = this.checkEdge(ctx.canvas.width,ctx.canvas.height);
+    if ((this.speed[0] > 0 && enemyEdgeCode[0] == 2)||
+        (this.speed[0] < 0 && enemyEdgeCode[0] == 1)) {
+      this.generateRandom();
     }
 };
 Enemy.prototype.update = function(dt) {
@@ -102,6 +106,48 @@ Enemy.prototype.update = function(dt) {
     // all computers
 
 };
+
+//  Generates random speed and position settings for enemies depending on the
+//  difficulty setting
+Enemy.prototype.generateRandom = function() {
+    var difficulty = this.difficulty,
+        tier = this.tier,
+        speedRange = 30*difficulty,
+        tileHeight = 83,
+        roadTiers = 3 + Math.floor(difficulty/2),
+        finalY = 230,
+        finalX = 200,
+        offsetX = 300,
+        direction = 'right',
+        speed;
+
+    if (difficulty > 1) {
+      var randomDirection = Math.round(Math.random());
+      if (randomDirection == 1) {
+        direction = 'left';
+      }
+    }
+
+    if (tier == 0) {
+      tier = Math.floor((Math.random()*roadTiers)+1);
+    }
+
+    speed = Math.floor(Math.random()*speedRange) + 60;
+    offsetX += Math.floor(Math.random()*20) * 10;
+
+    if (direction == 'left') {
+      offsetX *= -1;
+      speed *= -1;
+    }
+
+    finalX -= offsetX;
+    finalY -= (tier - 1) * tileHeight;
+    this.x = finalX;
+    this.y = finalY;
+    this.speed[0] = speed;
+    console.log(this.x,this.y,this.speed);
+};
+
 Enemy.prototype.constructor = Enemy;
 
 
@@ -114,32 +160,33 @@ Player.prototype.constructor = Player;
 Player.prototype.update = function() {
     this.x += this.speed[0];
     this.y += this.speed[1];
+    //Checking if the keymove will take it offscreen...
+    var edgeCode = this.checkEdge(ctx.canvas.width,ctx.canvas.height);
+
+    if (edgeCode[0] > 0){
+      this.x -= this.speed[0];
+    }
+    if (edgeCode[1] > 0) {
+      this.y -= this.speed[1];
+    }
     this.speed = [0,0];
 
 };
 
 Player.prototype.handleInput = function (direction) {
-  var edgeCode = this.checkEdge(ctx.canvas.width,ctx.canvas.height);
+//  var edgeCode = this.checkEdge(ctx.canvas.width,ctx.canvas.height);
   switch (direction) {
     case 'left':
-      if (edgeCode[0] != 1) {
-        this.speed[0] = -100;
-      }
+      this.speed[0] = -101;
       break;
     case 'right':
-      if (edgeCode[0] != 2) {
-        this.speed[0] = 100;
-      }
+      this.speed[0] = 101;
       break;
     case 'up':
-      if (edgeCode[1] != 1) {
-        this.speed[1] = -80;
-      }
+      this.speed[1] = -83;
       break;
     case 'down':
-      if (edgeCode[1] !=2) {
-        this.speed[1] = 80;
-      }
+      this.speed[1] = 83;
       break;
   }
 };
@@ -153,12 +200,29 @@ Player.prototype.handleInput = function (direction) {
 // Place all enemy objects in an array called allEnemies
 // Place the player object in a variable called player
 
-var enemyOne = new Enemy([-100,60],[10,0]);
+var enemyOne = new Enemy([-100,-20],[100,0]);
 //var enemyTwo = new Enemy([500,1],[-10,0]);
-var enemyThree = new Enemy([-100,220],[15,0]);
-var allEnemies = [enemyOne,enemyThree];
+var enemyThree = new Enemy([500,220],[-150,0]);
 
-var player = new Player([200,380],'images/char-boy.png');
+var generateEnemies = function(difficulty){
+    var roadTiers = 3 + Math.floor(difficulty/2),
+        enemyArray = [],
+        extraEnemies = (difficulty * 2) - 1;
+    do {
+      enemyArray.push(new Enemy(difficulty,roadTiers));
+      enemyArray[enemyArray.length - 1].generateRandom();
+      roadTiers--;
+    } while (roadTiers > 0);
+
+    do {
+      enemyArray.push(new Enemy(difficulty,0));
+      enemyArray[enemyArray.length - 1].generateRandom();
+      extraEnemies--;
+    } while (extraEnemies > 0);
+    return enemyArray;
+};
+var allEnemies = generateEnemies(3,allEnemies);
+var player = new Player([200,400],'images/char-boy.png');
 
 
 // This listens for key presses and sends the keys to your
