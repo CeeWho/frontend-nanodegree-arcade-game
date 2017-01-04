@@ -90,7 +90,8 @@ Enemy.prototype.collisionCheck = function() {
   // Also Check if the bug is off screen, if it is, respawn
   var enemyEdgeCode = this.checkEdge(ctx.canvas.width,ctx.canvas.height);
 
-  // Checks right Edge since bug moves left to right
+  // Checks right Edge since bug moves left to right. Respawn them on the left
+  // if they are off screen. Randomize their respawn position slightly
   if (this.speed[0] > 0 && enemyEdgeCode[0] == "right") {
     var randomRespawn = Math.floor((Math.random()*100)+1);
     this.x -= randomRespawn + (6 * TILE_WIDTH);
