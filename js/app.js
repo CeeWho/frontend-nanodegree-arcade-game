@@ -200,7 +200,7 @@ var generateEnemies = function () {
   do {
     enemyArray.push(new Enemy(roadTier));
     enemyArray[enemyArray.length-1].generateRandom();
-    enemyArray[enemyArray.length-1].x += 5 * TILE_WIDTH;
+    enemyArray[enemyArray.length-1].x += 3 * TILE_WIDTH;
     numberOfEnemies--;
     if (roadTier > 0) {roadTier--;}
   } while (numberOfEnemies > 0);
