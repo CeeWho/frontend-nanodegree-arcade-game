@@ -1,102 +1,104 @@
-// Enemies our player must avoid
-/*
-var Enemy = function(position,speed) {
-    // Variables applied to each of our instances go here,
-    // we've provided one for you to get started
-    this.x = position[0];
-    this.y = position[1];
-    this.speed = speed;
-    // The image/sprite for our enemies, this uses
-    // a helper we've provided to easily load images
-    this.sprite = 'images/enemy-bug.png';
-};
+// Konstants below
+const TILE_WIDTH = 101,
+  TILE_HEIGHT = 83,
+  ENEMY_WIDTH = 100,
+  ENTITY_HEIGHT = 71,
+  PLAYER_WIDTH = 60;
 
-// Update the enemy's position, required method for game
-// Parameter: dt, a time delta between ticks
-Enemy.prototype.update = function(dt) {
-    this.x = this.x + (dt * this.speed);
-    // You should multiply any movement by the dt parameter
-    // which will ensure the game runs at the same speed for
-    // all computers.
+// Global Variables, difficulty and allEnemies (array of enemy objects)
+var difficulty = 0,
+    allEnemies;
 
-};
 
-// Draw the enemy on the screen, required method for game
-Enemy.prototype.render = function() {
-    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
-};
-*/
-//--------------Original Code Above this line -----------------------
-
+//------------------------------ Entity Class ---------------------------------
 // Code for any entity in the game that might interact.
-// Input is a two item array
-var Entity = function(position,spriteLoc) {
-    // Variables applied to each of our instances go here,
-    // we've provided one for you to get started
-    this.x = position[0];
-    this.y = position[1];
-    // The image/sprite for our enemies, this uses
-    // a helper we've provided to easily load images
+// Input is a an array with 2D coordinates and a string for sprite location
+
+var Entity = function(positionX,positionY,spriteLoc) {
+    // Variables applied to each entity go here,
+    // below are coordinates
+    this.x = positionX;
+    this.y = positionY;
+
+    // The image/sprite for the entity, this uses
+    // a helper provided to easily load images
     this.sprite = spriteLoc;
+
+    // x, y array for speed coordinates. Not really necessary for these bugs,
+    // but allows for the flexibility of adding another Enemy that moves along
+    // the y axis
+
     this.speed = [0,0];
 };
+
 // Draw the entity on the screen, required method for game
 Entity.prototype.render = function() {
-      ctx.drawImage(Resources.get(this.sprite), (this.x), (this.y));
+    ctx.drawImage(Resources.get(this.sprite), (this.x), (this.y));
 };
 
-//  Check if entity is off the board
-Entity.prototype.checkEdge = function(wide,high) {
-    var edgeCode = [0,0]; // 0 = Not on Edge, 1 = right edge, 2 = left edge
-                          // 0 = Not on Edge, 1 = top edge, 2 = bottom edge
+// Check if entity is off the board
+Entity.prototype.checkEdge = function(canvasWidth,canvasHeight) {
+  // Strings that are assigned to onscreen or position relative to canvas
+  var edgeX = "onscreen", edgeY = "onscreen";
 
-    //Checking horizontally
-    if ((this.x + 101) <= 0) {
-      edgeCode[0] = 1;
-    } else if ((this.x+5) >= wide) {
-      edgeCode[0] = 2;
-    } else {
-      edgeCode[0] = 0;
-    }
+  // Check horizontally
+  if ((this.x + TILE_WIDTH) <= 0) {
+    edgeX = "left";
+  } else if ((this.x + 2) >= canvasWidth) {
+    edgeX = "right";
+  } else {
+    edgeX = "onscreen";
+  }
 
-    //And vertically...
-    if ((this.y+20) < 0) {
-      edgeCode[1] = 1;
-    } else if ((this.y+171) > high) {
-      edgeCode[1] = 2;
-    } else {
-      edgeCode[1] = 0;
-    }
-    return edgeCode;
+  // Check vertically
+  if ((this.y + ENTITY_HEIGHT) <= 0) {
+    edgeY = "above";
+  } else if ((this.y + ENTITY_HEIGHT) >= (canvasHeight - TILE_HEIGHT)) {
+    edgeY = "below";
+  } else {
+    edgeY = "onscreen";
+  }
+  return [edgeX, edgeY];
 };
+//-------------------------- End entity class --------------------------------
 
-
-
-var Enemy = function (difficulty,tier) {
-    Entity.call(this, [-150,200], 'images/enemy-bug.png');
-    this.difficulty = difficulty;
-    this.tier = tier;
+//-------------------------- Enemy Subclass ----------------------------------
+var Enemy = function (tier) {
+  Entity.call(this, -150, 200, 'images/enemy-bug.png');
+  this.tier = tier; // Which lane is it in. Counts from top. 0 = random
 };
 Enemy.prototype = Object.create(Entity.prototype);
+Enemy.prototype.constructor = Enemy;
+
+// Function to check for collisions
 Enemy.prototype.collisionCheck = function() {
-    var width = 100,
-        height = 71,
-        pWidth = 70;
-    var playerXOff = player.x + 15;
-    // first check for collision with Player
-    if (this.x < (playerXOff + pWidth) && (this.x+ width) > playerXOff) {
-      if (this.y < (player.y + height) &&
-      (this.y + height) > player.y) {
-        console.log('you lost',this.y);
-      }
+  // Player X is the player's left edge coordinate, corrected for sprite
+  var playerX = player.x + ((TILE_WIDTH - PLAYER_WIDTH) / 2),
+    playerY = player.y,
+    enemyX = this.x,
+    enemyY = this.y;
+
+  // Check for collision with player:
+  if (enemyX < (playerX + PLAYER_WIDTH) && (enemyX + ENEMY_WIDTH) > playerX) {
+    if (enemyY < (playerY + ENTITY_HEIGHT) &&
+      (enemyY + ENTITY_HEIGHT) > playerY) {
+      // Player has collided with a bug and has died! Triggers a function
+      youLose();
     }
-    // Then check for running off screen
-    var enemyEdgeCode = this.checkEdge(ctx.canvas.width,ctx.canvas.height);
-    if ((this.speed[0] > 0 && enemyEdgeCode[0] == 2)||
-        (this.speed[0] < 0 && enemyEdgeCode[0] == 1)) {
-      this.generateRandom();
-    }
+  }
+
+  // Also Check if the bug is off screen, if it is, respawn
+  var enemyEdgeCode = this.checkEdge(ctx.canvas.width,ctx.canvas.height);
+
+  // Checks both edges, but not really necessary for both
+  // unless bugs move right to left, another feature to be added
+  if ((this.speed[0] > 0 && enemyEdgeCode[0] == "right")||
+      (this.speed[0] < 0 && enemyEdgeCode[0] == "left")) {
+    this.generateRandom();
+  }
 };
+
+// Update enemy position, check for collisions
 Enemy.prototype.update = function(dt) {
     this.x += (dt * this.speed[0]);
     this.y += (dt * this.speed[1]);
@@ -104,125 +106,200 @@ Enemy.prototype.update = function(dt) {
     // You should multiply any movement by the dt parameter
     // which will ensure the game runs at the same speed for
     // all computers
-
 };
 
 //  Generates random speed and position settings for enemies depending on the
 //  difficulty setting
 Enemy.prototype.generateRandom = function() {
-    var difficulty = this.difficulty,
-        tier = this.tier,
-        speedRange = 30*difficulty,
-        tileHeight = 83,
-        roadTiers = 3 + Math.floor(difficulty/2),
-        finalY = 230,
-        finalX = 200,
-        offsetX = 300,
-        direction = 'right',
-        speed;
+  var tier = this.tier,
+      xStart = -ENEMY_WIDTH,
+      yStart = -20, // Adjustment Parameters for starting Y and X positions...
+      speed = 100, // Baseline speed
+      speedRange = 40 + (20 * difficulty); // Factor to randomize speed,
+                                               // dependent on difficulty
 
-    if (difficulty > 1) {
-      var randomDirection = Math.round(Math.random());
-      if (randomDirection == 1) {
-        direction = 'left';
-      }
-    }
+  // Randomize tier for some enemies
+  if (tier == 0) {
+    tier = Math.floor((Math.random()*3)+1);
+  }
 
-    if (tier == 0) {
-      tier = Math.floor((Math.random()*roadTiers)+1);
-    }
+  // Increase speed by a random factor dependent on difficulty
+  speed += Math.floor((Math.random()*speedRange)+1);
 
-    speed = Math.floor(Math.random()*speedRange) + 60;
-    offsetX += Math.floor(Math.random()*20) * 10;
+  // Randomize the xposition of where the bug starts
+  xStart -= ((Math.floor(Math.random() * 5 * TILE_WIDTH)+1));
 
-    if (direction == 'left') {
-      offsetX *= -1;
-      speed *= -1;
-    }
+  // Set y starting position according to tier
+  yStart += tier * TILE_HEIGHT;
 
-    finalX -= offsetX;
-    finalY -= (tier - 1) * tileHeight;
-    this.x = finalX;
-    this.y = finalY;
-    this.speed[0] = speed;
-    console.log(this.x,this.y,this.speed);
+  // Set parameters for the
+  this.x = xStart;
+  this.y = yStart;
+  this.speed[0] = speed;
 };
+//-------------------------- End of enemy subclass code ----------------------
 
-Enemy.prototype.constructor = Enemy;
-
-
-
-var Player = function (loc,img) {
-    Entity.call(this, loc, img);
+//-------------------------- Player Subclass ---------------------------------
+// Code below is for the player object. It is a subclass of entity
+var Player = function(playerSprite) {
+  Entity.call(this, 200, 403, playerSprite);
+  this.hold = true;
 };
 Player.prototype = Object.create(Entity.prototype);
 Player.prototype.constructor = Player;
+
+// Update function for Player. Checks for level clear and being at the edge,
+// and moves the player according to the keyboard input
 Player.prototype.update = function() {
+  if (this.y <= 10) {
+    levelClear(); // Function for beating the level
+  } else {
     this.x += this.speed[0];
     this.y += this.speed[1];
-    //Checking if the keymove will take it offscreen...
-    var edgeCode = this.checkEdge(ctx.canvas.width,ctx.canvas.height);
 
-    if (edgeCode[0] > 0){
+    // Check if move will take the player offscreen, horizontally
+    var edgeCode = this.checkEdge(ctx.canvas.width,ctx.canvas.height);
+    if (edgeCode[0] != "onscreen") {
       this.x -= this.speed[0];
     }
-    if (edgeCode[1] > 0) {
+    if (edgeCode[1] != "onscreen") {
       this.y -= this.speed[1];
     }
-    this.speed = [0,0];
-
+  }
+  this.speed = [0,0];
 };
 
-Player.prototype.handleInput = function (direction) {
-//  var edgeCode = this.checkEdge(ctx.canvas.width,ctx.canvas.height);
+// Handle keyboard input to move the player
+Player.prototype.handleInput = function(direction) {
   switch (direction) {
     case 'left':
-      this.speed[0] = -101;
+      this.speed[0] = -TILE_WIDTH;
       break;
     case 'right':
-      this.speed[0] = 101;
+      this.speed[0] = TILE_WIDTH;
       break;
     case 'up':
-      this.speed[1] = -83;
+      this.speed[1] = -TILE_HEIGHT;
       break;
     case 'down':
-      this.speed[1] = 83;
+      this.speed[1] = TILE_HEIGHT;
       break;
   }
 };
 
-// Now write your own player class
-// This class requires an update(), render() and
-// a handleInput() method.
-
-
-// Now instantiate your objects.
-// Place all enemy objects in an array called allEnemies
-// Place the player object in a variable called player
-
-var enemyOne = new Enemy([-100,-20],[100,0]);
-//var enemyTwo = new Enemy([500,1],[-10,0]);
-var enemyThree = new Enemy([500,220],[-150,0]);
-
-var generateEnemies = function(difficulty){
-    var roadTiers = 3 + Math.floor(difficulty/2),
-        enemyArray = [],
-        extraEnemies = (difficulty * 2) - 1;
-    do {
-      enemyArray.push(new Enemy(difficulty,roadTiers));
-      enemyArray[enemyArray.length - 1].generateRandom();
-      roadTiers--;
-    } while (roadTiers > 0);
-
-    do {
-      enemyArray.push(new Enemy(difficulty,0));
-      enemyArray[enemyArray.length - 1].generateRandom();
-      extraEnemies--;
-    } while (extraEnemies > 0);
-    return enemyArray;
+// Create an appropriate number of enemies and randomize them
+var generateEnemies = function () {
+  var enemyArray = [],
+      roadTier = 3,
+      numberOfEnemies = 5;
+  if (difficulty < 9) {
+    numberOfEnemies += difficulty;
+  } else {
+    numberOfEnemies = 12;
+  }
+  do {
+    enemyArray.push(new Enemy(roadTier));
+    enemyArray[enemyArray.length-1].generateRandom();
+    enemyArray[enemyArray.length-1].x += 5 * TILE_WIDTH;
+    numberOfEnemies--;
+    if (roadTier > 0) {roadTier--;}
+  } while (numberOfEnemies > 0);
+  allEnemies = enemyArray;
 };
-var allEnemies = generateEnemies(3,allEnemies);
-var player = new Player([200,400],'images/char-boy.png');
+//------------------------------ End of Player code --------------------------
+
+//------------------------------ ScreenText object code ----------------------
+/* This is an object that actually contains an image to be drawn on screen.
+ * The image just gives some dialog of what the game status is */
+var ScreenText = function() {
+  this.duration = 0; // Duration the text remains on screen
+  this.visible = false;
+  Entity.call(this, 50, 200, 'images/ready.png'); // Default position and image
+};
+ScreenText.prototype = Object.create(Entity.prototype);
+ScreenText.prototype.constructor = ScreenText;
+
+ScreenText.prototype.update = function (dt) {
+  if (this.duration > 0) {
+    this.duration -= dt*1000;
+  } else {
+    this.duration = 0;
+    this.visible = false;
+  }
+};
+
+//------------------------------ End of ScreenText object ----------------------
+
+/* Function to set a text overlay on screen, given an option will show different
+ * text such as "Ready" or "Level Clear" */
+var setTextOverlay = function(textOption,duration) {
+  var img = 'images/ready.png';
+  switch (textOption) {
+    case 'ready':
+      img = 'images/ready.png';
+      break;
+    case 'win':
+      img = 'images/win.png';
+      break;
+    case 'lose':
+      img = 'images/lose.png';
+      break;
+  }
+  textOnScreen.visible = true;
+  textOnScreen.duration = duration;
+  textOnScreen.sprite = img;
+};
+
+// Instantiating enemy objects in an array called allEnemies
+// Player object into player Variables
+generateEnemies();
+var player = new Player('images/char-boy.png');
+var textOnScreen = new ScreenText();
+// Function for what happens when you get through the level (yay!)
+var levelClear = function() {
+//  allEnemies = []; // Reset
+  difficulty++; // Increase difficulty
+
+//  player.hold = true; // Set player hold  <-- Maybe get rid of this?
+  player.x = 202; // Reset player position
+  player.y = 403;
+
+
+  generateEnemies();
+  setTextOverlay('win',1000);
+  //setTimeout( function() {getReady(0)},1000);
+};
+
+// Function for when you get crushed by a bug
+var youLose = function() {
+  allEnemies = []; // Reset enemies
+  difficulty = 0; // Reset difficulty
+
+  player.hold = true; // Set player hold
+  player.x = 202; // Reset player position
+  player.y = 403;
+
+  generateEnemies();
+  setTextOverlay('lose',500); // Show text overlay for 1 second
+  setTimeout( function() {getReady(0)},500); // Show Ready overlay after
+
+};
+
+// Function to show text for getting ready, takes parameter addedTime
+// which allows the ready delay to be extended (For the first level)
+var getReady = function(addedTime) {
+  var delay = 500 + addedTime; // Delay time and "Ready" text time in ms
+  setTextOverlay('ready', delay); //Show text overlay for delay time
+
+  // Hold player movement for delay time
+  setTimeout(function() {
+    player.hold = false },delay);
+};
+
+// Function for Player movement disabled
+var togglePlayerHold = function() {
+  player.hold = !player.hold;
+};
 
 
 // This listens for key presses and sends the keys to your
@@ -235,5 +312,8 @@ document.addEventListener('keyup', function(e) {
         40: 'down'
     };
 
-    player.handleInput(allowedKeys[e.keyCode]);
+    // Check to see if we're allowing the Player to move
+    if (!player.hold) {
+      player.handleInput(allowedKeys[e.keyCode]);
+    }
 });

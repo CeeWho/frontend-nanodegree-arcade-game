@@ -25,7 +25,6 @@ var Engine = (function(global) {
         ctx = canvas.getContext('2d'),
         lastTime;
 
-    console.log(ctx);
     canvas.width = 505;
     canvas.height = 606;
     doc.body.appendChild(canvas);
@@ -69,6 +68,7 @@ var Engine = (function(global) {
         reset();
         lastTime = Date.now();
         main();
+        getReady(500);
     }
 
     /* This function is called by main (our game loop) and itself calls all
@@ -97,6 +97,7 @@ var Engine = (function(global) {
             enemy.update(dt);
         });
         player.update();
+        textOnScreen.update(dt);
     }
 
     /* This function initially draws the "game level", it will then call
@@ -139,7 +140,6 @@ var Engine = (function(global) {
         }
 
         renderEntities();
-        //console.log(player.checkEdge([canvas.width,canvas.height]));
 
     }
 
@@ -156,6 +156,9 @@ var Engine = (function(global) {
         });
 
         player.render();
+        if (textOnScreen.visible == true) {
+          textOnScreen.render();
+        }
     }
 
     /* This function does nothing but it could have been a good place to
@@ -175,7 +178,10 @@ var Engine = (function(global) {
         'images/water-block.png',
         'images/grass-block.png',
         'images/enemy-bug.png',
-        'images/char-boy.png'
+        'images/char-boy.png',
+        'images/ready.png',
+        'images/win.png',
+        'images/lose.png'
     ]);
     Resources.onReady(init);
 
