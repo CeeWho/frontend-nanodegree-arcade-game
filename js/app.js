@@ -90,11 +90,10 @@ Enemy.prototype.collisionCheck = function() {
   // Also Check if the bug is off screen, if it is, respawn
   var enemyEdgeCode = this.checkEdge(ctx.canvas.width,ctx.canvas.height);
 
-  // Checks both edges, but not really necessary for both
-  // unless bugs move right to left, another feature to be added
-  if ((this.speed[0] > 0 && enemyEdgeCode[0] == "right")||
-      (this.speed[0] < 0 && enemyEdgeCode[0] == "left")) {
-    this.generateRandom();
+  // Checks right Edge since bug moves left to right
+  if (this.speed[0] > 0 && enemyEdgeCode[0] == "right") {
+    var randomRespawn = Math.floor((Math.random()*100)+1);
+    this.x -= randomRespawn + (6 * TILE_WIDTH);
   }
 };
 
@@ -200,7 +199,7 @@ var generateEnemies = function () {
   do {
     enemyArray.push(new Enemy(roadTier));
     enemyArray[enemyArray.length-1].generateRandom();
-    enemyArray[enemyArray.length-1].x += 3 * TILE_WIDTH;
+    enemyArray[enemyArray.length-1].x += 4 * TILE_WIDTH;
     numberOfEnemies--;
     if (roadTier > 0) {roadTier--;}
   } while (numberOfEnemies > 0);

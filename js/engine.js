@@ -154,7 +154,7 @@ var Engine = (function(global) {
         allEnemies.forEach(function(enemy) {
             enemy.render();
         });
-        ctx.font = "48px serif";
+        ctx.font = "48px sans-serif";
         ctx.fillText("Level: " + difficulty.toString(),20,550);
         player.render();
         if (textOnScreen.visible == true) {
