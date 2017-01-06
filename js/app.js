@@ -93,8 +93,8 @@ Enemy.prototype.collisionCheck = function() {
   // Checks right Edge since bug moves left to right. Respawn them on the left
   // if they are off screen. Randomize their respawn position slightly
   if (this.speed[0] > 0 && enemyEdgeCode[0] == "right") {
-    var randomRespawn = Math.floor((Math.random()*100)+1);
-    this.x -= randomRespawn + (6 * TILE_WIDTH);
+    this.generateRandom();
+    this.x -= TILE_WIDTH * 6;
   }
 };
 
@@ -112,8 +112,7 @@ Enemy.prototype.update = function(dt) {
 //  difficulty setting
 Enemy.prototype.generateRandom = function() {
   var tier = this.tier,
-      xStart = -ENEMY_WIDTH,
-      yStart = -20, // Adjustment Parameters for starting Y and X positions...
+      yStart = -20,
       speed = 100, // Baseline speed
       speedRange = 40 + (20 * difficulty); // Factor to randomize speed,
                                                // dependent on difficulty
@@ -126,14 +125,10 @@ Enemy.prototype.generateRandom = function() {
   // Increase speed by a random factor dependent on difficulty
   speed += Math.floor((Math.random()*speedRange)+1);
 
-  // Randomize the xposition of where the bug starts
-  xStart -= ((Math.floor(Math.random() * 5 * TILE_WIDTH)+1));
-
   // Set y starting position according to tier
   yStart += tier * TILE_HEIGHT;
 
-  // Set parameters for the
-  this.x = xStart;
+  // Set parameters for this enemy
   this.y = yStart;
   this.speed[0] = speed;
 };
@@ -200,7 +195,7 @@ var generateEnemies = function () {
   do {
     enemyArray.push(new Enemy(roadTier));
     enemyArray[enemyArray.length-1].generateRandom();
-    enemyArray[enemyArray.length-1].x += 4 * TILE_WIDTH;
+    enemyArray[enemyArray.length-1].x += (Math.random() * 4 * TILE_WIDTH) + 1;
     numberOfEnemies--;
     if (roadTier > 0) {roadTier--;}
   } while (numberOfEnemies > 0);
@@ -257,10 +252,8 @@ var player = new Player('images/char-boy.png');
 var textOnScreen = new ScreenText();
 // Function for what happens when you get through the level (yay!)
 var levelClear = function() {
-//  allEnemies = []; // Reset
   difficulty++; // Increase difficulty
 
-//  player.hold = true; // Set player hold  <-- Maybe get rid of this?
   player.x = 202; // Reset player position
   player.y = 403;
 
