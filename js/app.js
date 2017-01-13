@@ -1,9 +1,13 @@
+// Remaining to do:
+// 1 Adjust the text overlay thing to be draw text instead
+// 2 Best Score?
+
 // Konstants below
 const TILE_WIDTH = 101,
   TILE_HEIGHT = 83,
   ENEMY_WIDTH = 100,
   ENTITY_HEIGHT = 71,
-  PLAYER_WIDTH = 60;
+  PLAYER_WIDTH = 40;
 
 // Global Variables, difficulty and allEnemies (array of enemy objects)
 var difficulty = 0,
@@ -207,15 +211,14 @@ var generateEnemies = function () {
 /* This is an object that actually contains an image to be drawn on screen.
  * The image just gives some dialog of what the game status is */
 var ScreenText = function() {
+  this.text = "";
   this.duration = 0; // Duration the text remains on screen
   this.visible = false;
   Entity.call(this, 50, 200, 'images/ready.png'); // Default position and image
 };
-ScreenText.prototype = Object.create(Entity.prototype);
-ScreenText.prototype.constructor = ScreenText;
 
 ScreenText.prototype.update = function (dt) {
-  if (this.duration > 0) {
+  if (this.duration > 0 && this.visible) {
     this.duration -= dt*1000;
   } else {
     this.duration = 0;
@@ -223,26 +226,22 @@ ScreenText.prototype.update = function (dt) {
   }
 };
 
+ScreenText.prototype.render = function () {
+  if (this.visible) {
+    ctx.font = "60px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(this.text,300,350);
+  }
+}
+
 //------------------------------ End of ScreenText object ----------------------
 
 /* Function to set a text overlay on screen, given an option will show different
  * text such as "Ready" or "Level Clear" */
-var setTextOverlay = function(textOption,duration) {
-  var img = 'images/ready.png';
-  switch (textOption) {
-    case 'ready':
-      img = 'images/ready.png';
-      break;
-    case 'win':
-      img = 'images/win.png';
-      break;
-    case 'lose':
-      img = 'images/lose.png';
-      break;
-  }
+var setTextOverlay = function(text,duration) {
+  textOnScreen.text = text;
   textOnScreen.visible = true;
   textOnScreen.duration = duration;
-  textOnScreen.sprite = img;
 };
 
 // Instantiating enemy objects in an array called allEnemies
@@ -250,6 +249,7 @@ var setTextOverlay = function(textOption,duration) {
 generateEnemies();
 var player = new Player('images/char-boy.png');
 var textOnScreen = new ScreenText();
+
 // Function for what happens when you get through the level (yay!)
 var levelClear = function() {
   difficulty++; // Increase difficulty
@@ -259,8 +259,7 @@ var levelClear = function() {
 
 
   generateEnemies();
-  setTextOverlay('win',1000);
-  //setTimeout( function() {getReady(0)},1000);
+  setTextOverlay('Level Clear',1000);
 };
 
 // Function for when you get crushed by a bug
@@ -273,7 +272,7 @@ var youLose = function() {
   player.y = 403;
 
   generateEnemies();
-  setTextOverlay('lose',500); // Show text overlay for 1 second
+  setTextOverlay('You Lost!',500); // Show text overlay for 1 second
   setTimeout( function() {getReady(0)},500); // Show Ready overlay after
 
 };
@@ -282,7 +281,7 @@ var youLose = function() {
 // which allows the ready delay to be extended (For the first level)
 var getReady = function(addedTime) {
   var delay = 500 + addedTime; // Delay time and "Ready" text time in ms
-  setTextOverlay('ready', delay); //Show text overlay for delay time
+  setTextOverlay('Ready?', delay); //Show text overlay for delay time
 
   // Hold player movement for delay time
   setTimeout(function() {
