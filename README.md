@@ -1,6 +1,22 @@
-frontend-nanodegree-arcade-game
-===============================
 
-Students should use this [rubric](https://www.udacity.com/course/viewer/#!/c-nd001/l-2696458597/m-2687128535) for self-checking their submission.
 
-For detailed instructions on how to get started, check out this [guide](https://docs.google.com/document/d/1v01aScPjSWCCWQLIpFqvg3-vXLH2e8_SZQKC8jNO0Dc/pub?embedded=true).
+#Frontend Nanodegree Arcade Game
+
+The Frontend Nanodegree Arcade Game is a javascript-based version of frogger that can be run in browser. The game is a project as part of the [Frontend Nanodegree Program](https://www.udacity.com/course/front-end-web-developer-nanodegree--nd001).
+
+##Installation
+
+Run ‘index.html’ on browser of your choice.
+
+##Contributions
+
+Feel free to use code from this project. Just be sure to give credit.
+
+##Contact
+
+Please contact me, [CeeWho](https://github.com/CeeWho) through GitHub for anything regarding this project.
+
+##License
+
+The content of this repository is licensed under a
+[Creative Commons Attribution License](http://creativecommons.org/licenses/by/3.0/us/) with some parts coming directly from the [Udacity](https://www.udacity.com) Frontend Web Developer Nanodegree program.
