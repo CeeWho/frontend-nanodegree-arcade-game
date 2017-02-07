@@ -8,6 +8,10 @@ The Frontend Nanodegree Arcade Game is a javascript-based version of frogger tha
 
 Run `index.html` on browser of your choice.
 
+##How to play
+
+Try to cross the road to get to the river. Move by using the arrow keys. Watch out for bugs that might squish you, though!
+
 ##Contributions
 
 Feel free to use code from this project. Just be sure to give credit.
