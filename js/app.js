@@ -1,26 +1,20 @@
-// Remaining to do:
-// 1 Adjust the text overlay thing to be draw text instead
-// 2 Best Score?
-
+'use strict';
 // Konstants below
 const TILE_WIDTH = 101,
-  TILE_HEIGHT = 83,
-  ENEMY_WIDTH = 100,
-  ENTITY_HEIGHT = 71,
-  PLAYER_WIDTH = 40;
+    TILE_HEIGHT = 83,
+    ENEMY_WIDTH = 100,
+    ENTITY_HEIGHT = 71,
+    PLAYER_WIDTH = 40;
 
 // Global Variables, difficulty and allEnemies (array of enemy objects)
 var difficulty = 0,
     allEnemies;
 
-
 //------------------------------ Entity Class ---------------------------------
 // Code for any entity in the game that might interact.
-// Input is a an array with 2D coordinates and a string for sprite location
+// Input is a coordinates and a string for sprite location
 
-var Entity = function(positionX,positionY,spriteLoc) {
-    // Variables applied to each entity go here,
-    // below are coordinates
+var Entity = function (positionX, positionY, spriteLoc) {
     this.x = positionX;
     this.y = positionY;
 
@@ -28,20 +22,19 @@ var Entity = function(positionX,positionY,spriteLoc) {
     // a helper provided to easily load images
     this.sprite = spriteLoc;
 
-    // x, y array for speed coordinates. Not really necessary for these bugs,
+    // x, y array for speed coordinates. Not used yet for these bugs,
     // but allows for the flexibility of adding another Enemy that moves along
     // the y axis
-
-    this.speed = [0,0];
+    this.speed = [0, 0];
 };
 
 // Draw the entity on the screen, required method for game
-Entity.prototype.render = function() {
+Entity.prototype.render = function () {
     ctx.drawImage(Resources.get(this.sprite), (this.x), (this.y));
 };
 
 // Check if entity is off the board
-Entity.prototype.checkEdge = function(canvasWidth,canvasHeight) {
+Entity.prototype.checkEdge = function (canvasWidth, canvasHeight) {
   // Strings that are assigned to onscreen or position relative to canvas
   var edgeX = "onscreen", edgeY = "onscreen";
 
@@ -69,7 +62,7 @@ Entity.prototype.checkEdge = function(canvasWidth,canvasHeight) {
 //-------------------------- Enemy Subclass ----------------------------------
 var Enemy = function (tier) {
   Entity.call(this, -150, 200, 'images/enemy-bug.png');
-  this.tier = tier; // Which lane is it in. Counts from top. 0 = random
+  this.tier = tier; // Which lane is it in? Counts from top. 0 = random
 };
 Enemy.prototype = Object.create(Entity.prototype);
 Enemy.prototype.constructor = Enemy;
@@ -86,7 +79,7 @@ Enemy.prototype.collisionCheck = function() {
   if (enemyX < (playerX + PLAYER_WIDTH) && (enemyX + ENEMY_WIDTH) > playerX) {
     if (enemyY < (playerY + ENTITY_HEIGHT) &&
       (enemyY + ENTITY_HEIGHT) > playerY) {
-      // Player has collided with a bug and has died! Triggers a function
+      // Player has collided with a bug and died! Triggers a function
       youLose();
     }
   }
@@ -119,7 +112,7 @@ Enemy.prototype.generateRandom = function() {
       yStart = -20,
       speed = 100, // Baseline speed
       speedRange = 40 + (20 * difficulty); // Factor to randomize speed,
-                                               // dependent on difficulty
+                                           // dependent on difficulty
 
   // Randomize tier for some enemies
   if (tier == 0) {
@@ -132,7 +125,6 @@ Enemy.prototype.generateRandom = function() {
   // Set y starting position according to tier
   yStart += tier * TILE_HEIGHT;
 
-  // Set parameters for this enemy
   this.y = yStart;
   this.speed[0] = speed;
 };
@@ -156,7 +148,7 @@ Player.prototype.update = function() {
     this.x += this.speed[0];
     this.y += this.speed[1];
 
-    // Check if move will take the player offscreen, horizontally
+    // Check if move will take the player offscreen
     var edgeCode = this.checkEdge(ctx.canvas.width,ctx.canvas.height);
     if (edgeCode[0] != "onscreen") {
       this.x -= this.speed[0];
@@ -190,16 +182,19 @@ Player.prototype.handleInput = function(direction) {
 var generateEnemies = function () {
   var enemyArray = [],
       roadTier = 3,
-      numberOfEnemies = 5;
+      numberOfEnemies = 5; // Start with 5 enemies.
   if (difficulty < 9) {
-    numberOfEnemies += difficulty;
+    numberOfEnemies += difficulty; // I think 12 enemies is enough...
   } else {
     numberOfEnemies = 12;
   }
   do {
     enemyArray.push(new Enemy(roadTier));
-    enemyArray[enemyArray.length-1].generateRandom();
+    enemyArray[enemyArray.length-1].generateRandom(); // Random parameters
+
+    // Randomize x position
     enemyArray[enemyArray.length-1].x += (Math.random() * 4 * TILE_WIDTH) + 1;
+
     numberOfEnemies--;
     if (roadTier > 0) {roadTier--;}
   } while (numberOfEnemies > 0);
@@ -208,16 +203,17 @@ var generateEnemies = function () {
 //------------------------------ End of Player code --------------------------
 
 //------------------------------ ScreenText object code ----------------------
-/* This is an object that actually contains an image to be drawn on screen.
- * The image just gives some dialog of what the game status is */
+/* This is an object that contains the info about text to be drawn on screen.
+ * The text gives some dialog of what the game status is */
 var ScreenText = function() {
   this.text = "";
   this.duration = 0; // Duration the text remains on screen
   this.visible = false;
-  Entity.call(this, 50, 200, 'images/ready.png'); // Default position and image
 };
 
 ScreenText.prototype.update = function (dt) {
+  // Ensure that the text is on screen for the appropriate time. Uses the dt
+  // to make sure it runs for the same amount of time.
   if (this.duration > 0 && this.visible) {
     this.duration -= dt*1000;
   } else {
@@ -230,14 +226,13 @@ ScreenText.prototype.render = function () {
   if (this.visible) {
     ctx.font = "60px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(this.text,300,350);
+    ctx.fillText(this.text,300,350); // Show text in center
   }
 }
 
 //------------------------------ End of ScreenText object ----------------------
 
-/* Function to set a text overlay on screen, given an option will show different
- * text such as "Ready" or "Level Clear" */
+// Function to set a text overlay on screen
 var setTextOverlay = function(text,duration) {
   textOnScreen.text = text;
   textOnScreen.visible = true;
@@ -253,11 +248,8 @@ var textOnScreen = new ScreenText();
 // Function for what happens when you get through the level (yay!)
 var levelClear = function() {
   difficulty++; // Increase difficulty
-
   player.x = 202; // Reset player position
   player.y = 403;
-
-
   generateEnemies();
   setTextOverlay('Level Clear',1000);
 };
@@ -266,15 +258,12 @@ var levelClear = function() {
 var youLose = function() {
   allEnemies = []; // Reset enemies
   difficulty = 0; // Reset difficulty
-
   player.hold = true; // Set player hold
   player.x = 202; // Reset player position
   player.y = 403;
-
   generateEnemies();
-  setTextOverlay('You Lost!',500); // Show text overlay for 1 second
+  setTextOverlay('You Lost!',500); // Show text overlay for 1/2 second
   setTimeout( function() {getReady(0)},500); // Show Ready overlay after
-
 };
 
 // Function to show text for getting ready, takes parameter addedTime
