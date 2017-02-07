@@ -1,6 +1,6 @@
 'use strict';
 // Konstants below
-const TILE_WIDTH = 101,
+var TILE_WIDTH = 101,
     TILE_HEIGHT = 83,
     ENEMY_WIDTH = 100,
     ENTITY_HEIGHT = 71,
