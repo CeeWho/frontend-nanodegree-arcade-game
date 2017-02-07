@@ -144,6 +144,8 @@ Player.prototype.constructor = Player;
 Player.prototype.update = function() {
   if (this.y <= 10) {
     levelClear(); // Function for beating the level
+    this.x = 202; // Reset player position
+    this.y = 403;
   } else {
     this.x += this.speed[0];
     this.y += this.speed[1];
@@ -248,8 +250,6 @@ var textOnScreen = new ScreenText();
 // Function for what happens when you get through the level (yay!)
 var levelClear = function() {
   difficulty++; // Increase difficulty
-  player.x = 202; // Reset player position
-  player.y = 403;
   generateEnemies();
   setTextOverlay('Level Clear',1000);
 };
