@@ -6,7 +6,7 @@ The Frontend Nanodegree Arcade Game is a javascript-based version of frogger tha
 
 ##Installation
 
-Run ‘index.html’ on browser of your choice.
+Run `index.html` on browser of your choice.
 
 ##Contributions
 
